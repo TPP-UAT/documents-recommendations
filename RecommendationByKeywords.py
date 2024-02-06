@@ -1,43 +1,52 @@
+import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
+from sklearn.metrics.pairwise import cosine_similarity
 
 class RecommendationByKeywords:
     def __init__(self, documents):
         self.documents = documents
+        self.embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 
     def prepare_data(self, new_keywords):
-        print("SIZE: ", self.documents.get_size())
-        keywords_by_document = self.documents.get_keywords()
-        # Load the pre-trained Universal Sentence Encoder (USE) model
-        embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+        keywords_by_document = self.documents.get_keywords_by_document()
+        print("KEYWORDS:", keywords_by_document)
+        
+        embeddings_keywords_by_document = []
+        
+        # Convertir las palabras clave en una sola cadena
+        new_keywords_combined = ' '.join(new_keywords)
+        embeddings_new_keywords = self.embed([new_keywords_combined])
 
-        # Create embeddings for the existing documents and the new document
-        keywords_embeddings = embed(keywords_by_document)
-        new_keywords_embeddings = embed(new_keywords)
+        # Obtener representaciones vectoriales para las palabras clave de cada documento
+        for document_keywords in keywords_by_document.values():
+            document_keywords_combined = ' '.join(document_keywords)
+            embeddings_keywords_by_document.append(self.embed([document_keywords_combined]))
 
-        return keywords_embeddings, new_keywords_embeddings
-    
-    def softmax(self, x):
-        e_x = tf.exp(x - tf.reduce_max(x))
-        return e_x / tf.reduce_sum(e_x)
+        embeddings_keywords_by_document = np.array(embeddings_keywords_by_document)
+        
+        # Calcular la similitud del coseno entre las representaciones vectoriales de las palabras clave de los documentos y las nuevas palabras clave
+        similarities = cosine_similarity(embeddings_keywords_by_document.reshape(len(embeddings_keywords_by_document), -1), embeddings_new_keywords)
+
+        return similarities.flatten()
 
     def get_recommendations(self, new_keywords):
-        # Prepare the data for processing
-        keywords_embeddings, new_keywords_embeddings = self.prepare_data(new_keywords)
+        print("Recommendations:")
+        keywords_similarities = self.prepare_data(new_keywords)
 
-        # Calculate the cosine similarity between the new document and the existing documents
-        similarities = tf.matmul(keywords_embeddings, tf.transpose(new_keywords_embeddings))
-        probabilities = self.softmax(similarities)
+        # Normalize similarities
+        max_similarities = np.max(keywords_similarities)
+        if max_similarities == 0:
+            print("No matches found.")
+            return {}
 
-        print("probabilities: ", probabilities)
-        probs_by_doc = {}
-        document_probability_index = 0
-        for _, doc in self.documents.get_documents().items():
-            prob_by_document = 0
-            probs_by_doc[doc.get_id()] = 0
-            for _ in doc.get_keywords():
-                prob_by_document += sum(probabilities[document_probability_index])
-                document_probability_index += 1
-            probs_by_doc[doc.get_id()] = prob_by_document
-            
-        return probs_by_doc
+        normalized_similarities = keywords_similarities / max_similarities
+
+        # Map probabilities to document IDs
+        probs_by_doc_dict = {doc_id: prob for doc_id, prob in zip(self.documents.get_documents().keys(), normalized_similarities)}
+
+        # Print recommendations
+        for doc_id, probability in probs_by_doc_dict.items():
+            print(f"Document: {doc_id}, Probability: {probability}")
+
+        return probs_by_doc_dict
