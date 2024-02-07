@@ -3,7 +3,8 @@ import tensorflow as tf
 import tensorflow_hub as hub
 from FilesMapper import FilesMapper
 from Documents import Documents
-from RecommendationByKeywords import RecommendationByKeywords
+from RecommendationByKeywordsNumberSimilarities import RecommendationByKeywordsNumberSimilarities
+from RecommendationByKeywordsCosine import RecommendationByKeywordsCosine
 from RecommendationByAbstract import RecommendationByAbstract
 
 def print_results(recommendations):
@@ -25,8 +26,13 @@ if __name__ == '__main__':
     text_to_recommend = "This a text from lunar surface"
 
 
-    # Search for recommendations by keywords
-    recommendations = get_recomendation_by(RecommendationByKeywords(documents), new_keywords)
+    # Search recommendations by keywords by number of similarities
+    #recommendations = get_recomendation_by(RecommendationByKeywordsNumberSimilarities(documents), new_keywords)
+
+    # Search recommendations by keywords by cosine
+    recommendations = get_recomendation_by(RecommendationByKeywordsCosine(documents), new_keywords)
+
+
 
     # Search for recommendations by abstract
     #recommendations = get_recomendation_by(RecommendationByAbstract(documents), text_to_recommend)
