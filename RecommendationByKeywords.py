@@ -1,7 +1,6 @@
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
-from sklearn.metrics.pairwise import cosine_similarity
 
 class RecommendationByKeywords:
     def __init__(self, documents):
@@ -10,37 +9,31 @@ class RecommendationByKeywords:
 
     def prepare_data(self, new_keywords):
         keywords_by_document = self.documents.get_keywords_by_document()
-        print("KEYWORDS:", keywords_by_document)
         
-        embeddings_keywords_by_document = []
-        
-        # Convertir las palabras clave en una sola cadena
-        new_keywords_combined = ' '.join(new_keywords)
-        embeddings_new_keywords = self.embed([new_keywords_combined])
+        # Calculate the similarities between the new keywords and the keywords in each document
+        # To calculate this similarity, count the keywords that each document has in common with the entered document, and divide that
+        # number of similarities times the total number of keywords per document (#words_in_common / #words_in_that_document)
+        # And then I normalize all the results so that they are between [0, 1]
 
-        # Obtener representaciones vectoriales para las palabras clave de cada documento
+        similarities = []
         for document_keywords in keywords_by_document.values():
-            document_keywords_combined = ' '.join(document_keywords)
-            embeddings_keywords_by_document.append(self.embed([document_keywords_combined]))
-
-        embeddings_keywords_by_document = np.array(embeddings_keywords_by_document)
+            num_common_words = sum(1 for word in document_keywords if word in new_keywords)
+            similarity = num_common_words / len(document_keywords) if len(document_keywords) > 0 else 0
+            similarities.append(similarity)
         
-        # Calcular la similitud del coseno entre las representaciones vectoriales de las palabras clave de los documentos y las nuevas palabras clave
-        similarities = cosine_similarity(embeddings_keywords_by_document.reshape(len(embeddings_keywords_by_document), -1), embeddings_new_keywords)
-
-        return similarities.flatten()
+        return np.array(similarities)
 
     def get_recommendations(self, new_keywords):
         print("Recommendations:")
-        keywords_similarities = self.prepare_data(new_keywords)
+        similarities = self.prepare_data(new_keywords)
 
         # Normalize similarities
-        max_similarities = np.max(keywords_similarities)
-        if max_similarities == 0:
+        max_similarity = np.max(similarities)
+        if max_similarity == 0:
             print("No matches found.")
             return {}
 
-        normalized_similarities = keywords_similarities / max_similarities
+        normalized_similarities = similarities / max_similarity
 
         # Map probabilities to document IDs
         probs_by_doc_dict = {doc_id: prob for doc_id, prob in zip(self.documents.get_documents().keys(), normalized_similarities)}
