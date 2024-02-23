@@ -5,6 +5,7 @@ from FilesMapper import FilesMapper
 from Documents import Documents
 from RecommendationByKeywordsNumberSimilarities import RecommendationByKeywordsNumberSimilarities
 from RecommendationByKeywordsCosine import RecommendationByKeywordsCosine
+from RecommendationByKeywordsHierarchy import RecommendationByKeywordsHierarchy
 from RecommendationByAbstract import RecommendationByAbstract
 
 def print_results(recommendations):
@@ -22,7 +23,7 @@ if __name__ == '__main__':
 
     documents = files_mapper.get_documents()
 
-    new_keywords = ['Lunar probes', 'Lunar science', 'The Moon', 'Lunar composition', 'Lunar surface']
+    new_keywords = ['Space probes', 'The Moon', 'Lunar composition', 'Lunar surface']
     text_to_recommend = "This a text from lunar surface"
 
 
@@ -30,8 +31,10 @@ if __name__ == '__main__':
     #recommendations = get_recomendation_by(RecommendationByKeywordsNumberSimilarities(documents), new_keywords)
 
     # Search recommendations by keywords by cosine
-    recommendations = get_recomendation_by(RecommendationByKeywordsCosine(documents), new_keywords)
+    #recommendations = get_recomendation_by(RecommendationByKeywordsCosine(documents), new_keywords)
 
+    # Search recommendations by keywords by cosine
+    recommendations = get_recomendation_by(RecommendationByKeywordsHierarchy(documents, "UATPretty.json"), new_keywords)
 
 
     # Search for recommendations by abstract
