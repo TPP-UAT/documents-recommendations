@@ -42,3 +42,5 @@ class Documents:
         print("Adding document: ",document.id, document.get_keywords())
         self.documents[document.get_id()] = document
     
+    def iter_documents(self):
+        return iter(self.documents.values())

@@ -47,11 +47,3 @@ class KeywordsHierarchyMapper:
         # Save the hierarchy as JSON
         with open(output_file_path, 'w') as f:
             json.dump(keywords_hierarchy, f, indent=4)
-
-# Example usage of the script
-if __name__ == "__main__":
-    input_json_path = "UAT.json"  # Path of the input JSON file
-    output_json_path = "UATPretty.json"  # Path of the output JSON file
-
-    mapper = KeywordsHierarchyMapper(input_json_path)
-    mapper.save_hierarchy_as_json(output_json_path)

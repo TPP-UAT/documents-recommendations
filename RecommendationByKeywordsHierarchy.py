@@ -71,18 +71,25 @@ class RecommendationByKeywordsHierarchy:
                 queue.append((broader_id, depth + 1))
         return ancestors
         
-
     def get_recommendations(self, new_keywords):
-        print("New keywords to recommend:", new_keywords)
         document_probabilities = self.calculate_recommendation_probabilities(new_keywords)
+
+        # Check if there are no documents, return an empty dictionary if so
+        if not document_probabilities:
+            return {}
 
         # Find the maximum probability among all documents
         max_probability = max(document_probabilities.values())
 
+        # Check if max_probability is zero to avoid division by zero
+        if max_probability == 0:
+            return {}  # Return an empty dictionary if all probabilities are zero
+
         # Normalize probabilities
         normalized_probabilities = {doc_id: probability / max_probability for doc_id, probability in document_probabilities.items()}
 
-        print("Recommendations:")
+        recommendations = {}
         for doc_id, probability in normalized_probabilities.items():
-            print(f"Document: {doc_id}, Probability: {probability}")
+            recommendations[doc_id] = probability
 
+        return recommendations

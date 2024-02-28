@@ -10,7 +10,7 @@ class FilesMapper:
     def __init__(self):
         self.documents = Documents()
         self.files_path = DOCUMENTS_PATH
-
+    
     # Getters
     def get_documents(self):
         return self.documents

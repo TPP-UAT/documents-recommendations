@@ -24,7 +24,6 @@ class RecommendationByKeywordsNumberSimilarities:
         return np.array(similarities)
 
     def get_recommendations(self, new_keywords):
-        print("Recommendations:")
         similarities = self.prepare_data(new_keywords)
 
         # Normalize similarities
@@ -37,9 +36,5 @@ class RecommendationByKeywordsNumberSimilarities:
 
         # Map probabilities to document IDs
         probs_by_doc_dict = {doc_id: prob for doc_id, prob in zip(self.documents.get_documents().keys(), normalized_similarities)}
-
-        # Print recommendations
-        for doc_id, probability in probs_by_doc_dict.items():
-            print(f"Document: {doc_id}, Probability: {probability}")
 
         return probs_by_doc_dict

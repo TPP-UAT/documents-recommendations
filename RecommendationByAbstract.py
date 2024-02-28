@@ -29,8 +29,6 @@ class RecommendationByAbstract:
         similarities = tf.reduce_sum(tf.multiply(abstracts_embeddings, tf.expand_dims(new_abstracts_embeddings, 0)), axis=1)
         probabilities = self.softmax(similarities)
 
-        print("probabilities: ", probabilities)
-        print("")
         probs_by_doc = {}
         document_probability_index = 0
         for _, doc in self.documents.get_documents().items():
