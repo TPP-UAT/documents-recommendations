@@ -7,7 +7,9 @@ from RecommendationByKeywordsCosine import RecommendationByKeywordsCosine
 from RecommendationByKeywordsHierarchy import RecommendationByKeywordsHierarchy
 
 class Recommendation:
-    def __init__(self, weight_cosine, weight_similarities, weight_hierarchy):
+    def __init__(self, document, keywords_of_doc, weight_cosine, weight_similarities, weight_hierarchy):
+        self.document_to_recommend = document
+        self.keywords_of_document = keywords_of_doc
         self.weight_cosine = weight_cosine
         self.weight_similarities = weight_similarities
         self.weight_hierarchy = weight_hierarchy
