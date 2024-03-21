@@ -1,40 +1,42 @@
+import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 class RecommendationByAbstract:
-    def __init__(self, documents):
+    def initialize(self, documents):
         self.documents = documents
+        self.embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+        self.weight = 0.3
 
-    def prepare_data(self, new_text):
-        abstract_by_document = self.documents.get_abstracts()
-        print("NEW TEXT: ", new_text)
-        # Load the pre-trained Universal Sentence Encoder (USE) model
-        embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+    def prepare_data(self, new_abstract):
+        abstracts = list(self.documents.get_abstracts_by_document().values())
+        abstracts.append(new_abstract)
 
-        # Create embeddings for the existing documents and the new document
-        abstracts_embeddings = embed(abstract_by_document)
-        new_abstracts_embeddings = embed([new_text])[0]
+        # Vectorización de los abstracts
+        tfidf_vectorizer = TfidfVectorizer()
+        tfidf_matrix = tfidf_vectorizer.fit_transform(abstracts)
 
-        return abstracts_embeddings, new_abstracts_embeddings
-    
-    def softmax(self, x):
-        e_x = tf.exp(x - tf.reduce_max(x))
-        return e_x / tf.reduce_sum(e_x)
+        # Cálculo de similitud coseno entre los abstracts
+        similarity_scores = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1])
 
-    def get_recommendations(self, new_text):
-        # Prepare the data for processing
-        abstracts_embeddings, new_abstracts_embeddings = self.prepare_data(new_text)
+        return similarity_scores.flatten()
 
-        # Calculate the cosine similarity between the new document and the existing documents
-        similarities = tf.reduce_sum(tf.multiply(abstracts_embeddings, tf.expand_dims(new_abstracts_embeddings, 0)), axis=1)
-        probabilities = self.softmax(similarities)
+    def get_recommendations(self, document):
+        similarity_scores = self.prepare_data(document.abstract)
 
-        print("probabilities: ", probabilities)
-        print("")
-        probs_by_doc = {}
-        document_probability_index = 0
-        for _, doc in self.documents.get_documents().items():
-            probs_by_doc[doc.get_id()] = probabilities[document_probability_index]
-            document_probability_index += 1
-            
-        return probs_by_doc
+        # Normalize similarities
+        max_similarities = np.max(similarity_scores)
+        if max_similarities == 0:
+            print("No matches found.")
+            return {}
+
+        normalized_similarities = (similarity_scores * self.weight) / max_similarities
+
+        # Map probabilities to document IDs and print
+        probs_by_doc_dict = {doc_title: prob for doc_title, prob in zip(self.documents.get_abstracts_by_document().keys(), normalized_similarities)}
+        for doc_title, prob in probs_by_doc_dict.items():
+            print(f"Abstract Probability for {doc_title}: {prob}")
+
+        return probs_by_doc_dict
