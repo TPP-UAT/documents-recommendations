@@ -31,7 +31,6 @@ class FilesMapper:
         regex_pattern = r'Abstract([\s\S]*?)Uniﬁed Astronomy Thesaurus concepts:'
         extracted_text = ''
         match = re.search(regex_pattern, text[0])
-
         if match:
             extracted_text += match.group(1) 
 
@@ -58,6 +57,8 @@ class FilesMapper:
                 abstract_text = self.parse_abstract([full_text[0]])
                 # Obtain keywords from document
                 keywords = self.parse_keywords(full_text[0])
+                if keywords == []:
+                    print("------------------------------EMPTY---------------------")
 
                 document = Document(file, abstract_text, keywords, full_text)
                 self.documents.add_document(document)

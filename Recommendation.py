@@ -1,50 +1,33 @@
-import json
 from FilesMapper import FilesMapper
-from Documents import Documents
 from RecommendationByAbstract import RecommendationByAbstract
 from RecommendationByKeywordsNumberSimilarities import RecommendationByKeywordsNumberSimilarities
 from RecommendationByKeywordsCosine import RecommendationByKeywordsCosine
 from RecommendationByKeywordsHierarchy import RecommendationByKeywordsHierarchy
 
 class Recommendation:
-    def __init__(self, document, keywords_of_doc, weight_cosine, weight_similarities, weight_hierarchy):
-        self.document_to_recommend = document
-        self.keywords_of_document = keywords_of_doc
-        self.weight_cosine = weight_cosine
-        self.weight_similarities = weight_similarities
-        self.weight_hierarchy = weight_hierarchy
+    def __init__(self, document_to_recommend):
+        self.recommendation_types = [RecommendationByKeywordsNumberSimilarities(), RecommendationByKeywordsCosine(), RecommendationByKeywordsHierarchy(), RecommendationByAbstract()]
+        self.document_to_recommend = document_to_recommend
 
-    def get_recommendation_by(self, recommendation_instance, data_to_recommend):
-        return recommendation_instance.get_recommendations(data_to_recommend)
-
-    def get_recommendation(self, data_to_make_recommendation):
+    def get_recommendation(self):
         files_mapper = FilesMapper()
         files_mapper.parse_documents()
         documents = files_mapper.get_documents()
 
-        # Get recommendations by number of keyword similarities
-        recommendations_by_similarities = self.get_recommendation_by(RecommendationByKeywordsNumberSimilarities(documents), data_to_make_recommendation)
+        recommendations = []
+        for recommendation_instance in self.recommendation_types:
+            print("RECOMMENDATION ITER")
+            recommendation_instance.initialize(documents)
+            recommendation = recommendation_instance.get_recommendations(self.document_to_recommend)
+            recommendations.append(recommendation)
 
-        # Get recommendations by keyword cosine similarity
-        recommendations_by_cosine = self.get_recommendation_by(RecommendationByKeywordsCosine(documents), data_to_make_recommendation)
-
-        # Get recommendations by keyword hierarchy
-        recommendations_by_hierarchy = self.get_recommendation_by(RecommendationByKeywordsHierarchy(documents, "UATPretty.json"), data_to_make_recommendation)
-
-        # Get recommendations by Abstract
-        #recommendations_by_abstract = self.get_recommendation_by(RecommendationByAbstract(documents), 'This is a text from a Earth-moon system')
-
-        # Combine the probabilities with the weights
+        # Combine the probabilities
         combined_probabilities = {}
         documents = files_mapper.get_documents().iter_documents()
 
         for doc in documents:
             doc_id = doc.get_id()
-            probability = (
-                recommendations_by_similarities.get(doc_id, 0) * self.weight_similarities +
-                recommendations_by_cosine.get(doc_id, 0) * self.weight_cosine +
-                recommendations_by_hierarchy.get(doc_id, 0) * self.weight_hierarchy
-            )
+            probability = sum(recommendation.get(doc_id, 0) for recommendation in recommendations)
             combined_probabilities[doc_id] = probability
 
         # Check for combined probabilities

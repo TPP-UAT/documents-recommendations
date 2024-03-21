@@ -1,9 +1,10 @@
 import json
 
 class RecommendationByKeywordsHierarchy:
-    def __init__(self, documents, json_file_path):
-        self.json_file_path = json_file_path
+    def initialize(self, documents):
+        self.json_file_path = "UATPretty.json"
         self.documents = documents
+        self.weight = 0.2
 
     def build_hierarchy(self):
         with open(self.json_file_path, 'r') as f:
@@ -71,8 +72,8 @@ class RecommendationByKeywordsHierarchy:
                 queue.append((broader_id, depth + 1))
         return ancestors
         
-    def get_recommendations(self, new_keywords):
-        document_probabilities = self.calculate_recommendation_probabilities(new_keywords)
+    def get_recommendations(self, document_to_recommend):
+        document_probabilities = self.calculate_recommendation_probabilities(document_to_recommend.keywords)
 
         # Check if there are no documents, return an empty dictionary if so
         if not document_probabilities:
@@ -86,7 +87,7 @@ class RecommendationByKeywordsHierarchy:
             return {}  # Return an empty dictionary if all probabilities are zero
 
         # Normalize probabilities
-        normalized_probabilities = {doc_id: probability / max_probability for doc_id, probability in document_probabilities.items()}
+        normalized_probabilities = {doc_id: (probability * self.weight) / max_probability for doc_id, probability in document_probabilities.items()}
 
         recommendations = {}
         for doc_id, probability in normalized_probabilities.items():

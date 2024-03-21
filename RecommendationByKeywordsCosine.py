@@ -4,9 +4,10 @@ import tensorflow_hub as hub
 from sklearn.metrics.pairwise import cosine_similarity
 
 class RecommendationByKeywordsCosine:
-    def __init__(self, documents):
+    def initialize(self, documents):
         self.documents = documents
         self.embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+        self.weight = 0.3
 
     def prepare_data(self, new_keywords):
         keywords_by_document = self.documents.get_keywords_by_document()
@@ -29,8 +30,8 @@ class RecommendationByKeywordsCosine:
 
         return similarities.flatten()
 
-    def get_recommendations(self, new_keywords):
-        keywords_similarities = self.prepare_data(new_keywords)
+    def get_recommendations(self, document_to_recommend):
+        keywords_similarities = self.prepare_data(document_to_recommend.keywords)
 
         # Normalize similarities
         max_similarities = np.max(keywords_similarities)
@@ -38,7 +39,7 @@ class RecommendationByKeywordsCosine:
             print("No matches found.")
             return {}
 
-        normalized_similarities = keywords_similarities / max_similarities
+        normalized_similarities = (keywords_similarities * self.weight) / max_similarities
 
         # Map probabilities to document IDs
         probs_by_doc_dict = {doc_id: prob for doc_id, prob in zip(self.documents.get_documents().keys(), normalized_similarities)}

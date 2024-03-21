@@ -24,6 +24,12 @@ class Documents:
             keywords_by_document[document_id] = document.get_keywords()
         return keywords_by_document
     
+    def get_abstracts_by_document(self):
+        abstracts_by_document = {}
+        for document_id, document in self.documents.items():
+            abstracts_by_document[document_id] = document.abstract
+        return abstracts_by_document
+    
     def get_abstracts(self):
         abstracts = []
         for _, document in self.documents.items():
