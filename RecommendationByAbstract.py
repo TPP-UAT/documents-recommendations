@@ -30,6 +30,7 @@ class RecommendationByAbstract:
         probabilities = self.softmax(similarities)
 
         print("probabilities: ", probabilities)
+        print("")
         probs_by_doc = {}
         document_probability_index = 0
         for _, doc in self.documents.get_documents().items():

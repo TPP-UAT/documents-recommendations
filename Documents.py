@@ -16,8 +16,13 @@ class Documents:
         keywords = []
         for _, document in self.documents.items():
             keywords.extend(document.get_keywords())
-
         return keywords
+    
+    def get_keywords_by_document(self):
+        keywords_by_document = {}
+        for document_id, document in self.documents.items():
+            keywords_by_document[document_id] = document.get_keywords()
+        return keywords_by_document
     
     def get_abstracts(self):
         abstracts = []
@@ -34,6 +39,6 @@ class Documents:
         return full_texts
     
     def add_document(self, document):
-        print("Adding document: ", document.get_keywords())
+        print("Adding document: ",document.id, document.get_keywords())
         self.documents[document.get_id()] = document
     
