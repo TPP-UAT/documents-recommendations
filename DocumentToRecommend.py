@@ -24,22 +24,22 @@ class DocumentToRecommend:
         target_text = "Uniﬁed Astronomy Thesaurus concepts:"
         full_text = self.get_full_text_from_file()
             
-        # Buscar el texto objetivo en la página actual
+        # Find the target text on the current page
         if target_text in full_text:
-            # Extraer las palabras clave del texto objetivo
+            # Extract keywords from target text
             start_index = full_text.index(target_text)
             end_index = start_index + len(target_text)
             target_text_snippet = full_text[end_index:]
-            # Buscar las palabras clave separadas por punto y coma
+            # Find keywords separated by semicolons
             for line in target_text_snippet.split('\n'):
                 line = line.strip()
                 if not line:
                     break
-                # Verificar si hay punto y coma en la línea
+                # Check if there is a semicolon on the line
                 if ';' in line:
                     keywords.extend(line.split(';'))
                 else:
-                    break  # Si no hay punto y coma, terminar de buscar palabras clave
+                    break  # If there is no semicolon, finish searching for keywords
     
         keywords_with_ids = [keyword.strip() for keyword in keywords if keyword.strip()]
         keywords = [re.sub(r'\s*\(\d+\)', '', keyword) for keyword in keywords_with_ids]

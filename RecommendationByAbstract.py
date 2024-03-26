@@ -1,24 +1,25 @@
 import numpy as np
-import tensorflow as tf
 import tensorflow_hub as hub
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+
+WEIGHT = 0.3
 
 class RecommendationByAbstract:
     def initialize(self, documents):
         self.documents = documents
         self.embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-        self.weight = 0.3
+        self.weight = WEIGHT
 
     def prepare_data(self, new_abstract):
         abstracts = list(self.documents.get_abstracts_by_document().values())
         abstracts.append(new_abstract)
 
-        # Vectorización de los abstracts
+        # Vectorization of abstracts
         tfidf_vectorizer = TfidfVectorizer()
         tfidf_matrix = tfidf_vectorizer.fit_transform(abstracts)
 
-        # Cálculo de similitud coseno entre los abstracts
+        # Calculation of cosine similarity between abstracts
         similarity_scores = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1])
 
         return similarity_scores.flatten()

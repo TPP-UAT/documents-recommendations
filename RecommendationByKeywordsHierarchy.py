@@ -1,10 +1,12 @@
 import json
 
+WEIGHT = 0.2
+
 class RecommendationByKeywordsHierarchy:
     def initialize(self, documents):
         self.json_file_path = "UATPretty.json"
         self.documents = documents
-        self.weight = 0.2
+        self.weight = WEIGHT
 
     def build_hierarchy(self):
         with open(self.json_file_path, 'r') as f:

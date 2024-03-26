@@ -16,7 +16,6 @@ class Recommendation:
 
         recommendations = []
         for recommendation_instance in self.recommendation_types:
-            print("RECOMMENDATION ITER")
             recommendation_instance.initialize(documents)
             recommendation = recommendation_instance.get_recommendations(self.document_to_recommend)
             recommendations.append(recommendation)
