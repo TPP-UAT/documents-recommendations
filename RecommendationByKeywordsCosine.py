@@ -1,13 +1,14 @@
 import numpy as np
-import tensorflow as tf
 import tensorflow_hub as hub
 from sklearn.metrics.pairwise import cosine_similarity
+
+WEIGHT = 0.3
 
 class RecommendationByKeywordsCosine:
     def initialize(self, documents):
         self.documents = documents
         self.embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-        self.weight = 0.3
+        self.weight = WEIGHT
 
     def prepare_data(self, new_keywords):
         keywords_by_document = self.documents.get_keywords_by_document()
