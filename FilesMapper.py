@@ -23,7 +23,7 @@ class FilesMapper:
         if len(urls) > 0:
             parts = urls[0].split(';')
 
-            # Iterar a través de las partes y extraer el texto deseado
+            # Iterate through the parts and extract the desired text
             result = [part.split('(')[0].strip().replace('\n', ' ') for part in parts]
             return result
     
@@ -57,8 +57,6 @@ class FilesMapper:
                 abstract_text = self.parse_abstract([full_text[0]])
                 # Obtain keywords from document
                 keywords = self.parse_keywords(full_text[0])
-                if keywords == []:
-                    print("------------------------------EMPTY---------------------")
 
                 document = Document(file, abstract_text, keywords, full_text)
                 self.documents.add_document(document)
