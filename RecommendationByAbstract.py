@@ -6,10 +6,16 @@ from sklearn.metrics.pairwise import cosine_similarity
 WEIGHT = 0.3
 
 class RecommendationByAbstract:
+    def __init__(self):
+        self.documents = None
+        self.embed = None
+        self.weight = WEIGHT
+
     def initialize(self, documents):
         self.documents = documents
-        self.embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-        self.weight = WEIGHT
+        # Load any necessary resources or models here
+        # For example:
+        # self.embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 
     def prepare_data(self, new_abstract):
         abstracts = list(self.documents.get_abstracts_by_document().values())
@@ -25,6 +31,10 @@ class RecommendationByAbstract:
         return similarity_scores.flatten()
 
     def get_recommendations(self, document):
+        if self.documents is None:
+            print("Error: Documents not initialized. Please call initialize() first.")
+            return {}
+
         similarity_scores = self.prepare_data(document.abstract)
 
         # Normalize similarities
@@ -37,7 +47,5 @@ class RecommendationByAbstract:
 
         # Map probabilities to document IDs and print
         probs_by_doc_dict = {doc_title: prob for doc_title, prob in zip(self.documents.get_abstracts_by_document().keys(), normalized_similarities)}
-        for doc_title, prob in probs_by_doc_dict.items():
-            print(f"Abstract Probability for {doc_title}: {prob}")
 
         return probs_by_doc_dict

@@ -93,6 +93,11 @@ class RecommendationByKeywordsHierarchy:
 
         recommendations = {}
         for doc_id, probability in normalized_probabilities.items():
-            recommendations[doc_id] = probability
+            # Construct recommendation format with additional details
+            recommendations[doc_id] = {
+                "probability": probability,
+                "top_keyword": "",  # Placeholder for top keyword
+                "top_similarity": 0.0  # Placeholder for top similarity
+            }
 
         return recommendations
