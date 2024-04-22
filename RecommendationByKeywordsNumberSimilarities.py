@@ -1,13 +1,17 @@
 import numpy as np
-import tensorflow_hub as hub
 
 WEIGHT = 0.2
 
 class RecommendationByKeywordsNumberSimilarities:
+    def __init__(self):
+        self.embed = None
+        self.weight = WEIGHT
+
     def initialize(self, documents):
         self.documents = documents
-        self.embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-        self.weight = WEIGHT
+        # Load any necessary resources or models here
+        # For example:
+        # self.embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 
     def prepare_data(self, new_keywords):
         keywords_by_document = self.documents.get_keywords_by_document()

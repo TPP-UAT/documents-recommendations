@@ -1,48 +1,50 @@
-import numpy as np
 import tensorflow_hub as hub
 from sklearn.metrics.pairwise import cosine_similarity
 
-WEIGHT = 0.3
-
 class RecommendationByKeywordsCosine:
+    def __init__(self):
+        self.embed = None
+        self.documents = None
+
     def initialize(self, documents):
-        self.documents = documents
         self.embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-        self.weight = WEIGHT
+        self.documents = documents
 
     def prepare_data(self, new_keywords):
+        if self.documents is None:
+            raise ValueError("Documents have not been initialized. Call initialize() first.")
+
         keywords_by_document = self.documents.get_keywords_by_document()
-        
-        embeddings_keywords_by_document = []
-        
-        # Convert keywords to a single string
-        new_keywords_combined = ' '.join(new_keywords)
-        embeddings_new_keywords = self.embed([new_keywords_combined])
+        detailed_similarity_scores = {}
 
-        # Obtain vector representations for the keywords of each document
-        for document_keywords in keywords_by_document.values():
-            document_keywords_combined = ' '.join(document_keywords)
-            embeddings_keywords_by_document.append(self.embed([document_keywords_combined]))
+        for doc_id, document_keywords in keywords_by_document.items():
+            detailed_similarity_scores[doc_id] = {"total_similarity": 0, "top_keyword": "", "top_similarity": 0}
+            for keyword in new_keywords:
+                embeddings_new_keyword = self.embed([keyword])
+                for doc_keyword in document_keywords:
+                    embeddings_doc_keyword = self.embed([doc_keyword])
+                    similarity = cosine_similarity(embeddings_new_keyword, embeddings_doc_keyword)[0][0]
+                    detailed_similarity_scores[doc_id]["total_similarity"] += similarity
+                    if similarity > detailed_similarity_scores[doc_id]["top_similarity"]:
+                        detailed_similarity_scores[doc_id]["top_similarity"] = similarity
+                        detailed_similarity_scores[doc_id]["top_keyword"] = doc_keyword
 
-        embeddings_keywords_by_document = np.array(embeddings_keywords_by_document)
-        
-        # Compute cosine similarity between vector representations of document keywords and new keywords
-        similarities = cosine_similarity(embeddings_keywords_by_document.reshape(len(embeddings_keywords_by_document), -1), embeddings_new_keywords)
+        max_total_similarity = max(score["total_similarity"] for score in detailed_similarity_scores.values())
+        for doc_id, scores in detailed_similarity_scores.items():
+            normalized_total_similarity = (scores["total_similarity"] / max_total_similarity) if max_total_similarity > 0 else 0
+            scores["total_similarity"] = normalized_total_similarity
 
-        return similarities.flatten()
+        return detailed_similarity_scores
 
     def get_recommendations(self, document_to_recommend):
+        if self.documents is None:
+            raise ValueError("Documents have not been initialized. Call initialize() first.")
+
         keywords_similarities = self.prepare_data(document_to_recommend.keywords)
-
-        # Normalize similarities
-        max_similarities = np.max(keywords_similarities)
-        if max_similarities == 0:
-            print("No matches found.")
-            return {}
-
-        normalized_similarities = (keywords_similarities * self.weight) / max_similarities
-
-        # Map probabilities to document IDs
-        probs_by_doc_dict = {doc_id: prob for doc_id, prob in zip(self.documents.get_documents().keys(), normalized_similarities)}
-
-        return probs_by_doc_dict
+        return {
+            doc_id: {
+                "probability": details["total_similarity"],
+                "top_keyword": details["top_keyword"],
+                "top_similarity": details["top_similarity"]
+            } for doc_id, details in keywords_similarities.items()
+        }
