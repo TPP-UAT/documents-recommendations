@@ -1,45 +1,25 @@
-import numpy as np
+from RecommendationDetails import RecommendationDetails
 
 WEIGHT = 0.2
+METHOD_NAME = 'Number of Similarity'
 
 class RecommendationByKeywordsNumberSimilarities:
     def __init__(self):
         self.embed = None
         self.weight = WEIGHT
+        self.method_name = METHOD_NAME
+  
 
-    def initialize(self, documents):
-        self.documents = documents
-        # Load any necessary resources or models here
-        # For example:
-        # self.embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+    def get_recommendations(self, article, document_to_recommend):
+        keywords_to_recommend = document_to_recommend.get_keywords()
+        article_keywords = article.get_keywords()
+        count_common_keywords = 0
+        top_keywords = {}
+        for article_keyword in article_keywords:
+            if article_keyword in keywords_to_recommend:
+                count_common_keywords += 1
+                top_keywords[article_keyword] = 1/len(article_keywords)
 
-    def prepare_data(self, new_keywords):
-        keywords_by_document = self.documents.get_keywords_by_document()
-        # Calculate the similarities between the new keywords and the keywords in each document
-        # To calculate this similarity, count the keywords that each document has in common with the entered document, and divide that
-        # number of similarities times the total number of keywords per document (#words_in_common / #words_in_that_document)
-        # And then I normalize all the results so that they are between [0, 1]
+        doc_method_probability = count_common_keywords/(len(article_keywords))
 
-        similarities = []
-        for document_keywords in keywords_by_document.values():
-            num_common_words = sum(1 for word in document_keywords if word in new_keywords)
-            similarity = num_common_words / len(document_keywords) if len(document_keywords) > 0 else 0
-            similarities.append(similarity)
-        
-        return np.array(similarities)
-
-    def get_recommendations(self, document_to_recommend):
-        similarities = self.prepare_data(document_to_recommend.keywords)
-
-        # Normalize similarities
-        max_similarity = np.max(similarities)
-        if max_similarity == 0:
-            print("No matches found.")
-            return {}
-
-        normalized_similarities = (similarities / max_similarity) * self.weight
-
-        # Map probabilities to document IDs
-        probs_by_doc_dict = {doc_id: prob for doc_id, prob in zip(self.documents.get_documents().keys(), normalized_similarities)}
-
-        return probs_by_doc_dict
+        return RecommendationDetails(self.method_name, doc_method_probability, top_keywords, self.weight)
