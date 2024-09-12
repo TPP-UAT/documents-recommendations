@@ -50,6 +50,7 @@ class FilesMapper:
         # Get the list of files
         files = os.listdir(DOCUMENTS_PATH)
         for file in files:
+            print("file", file)
             try:
                 # Obtain full text from document
                 full_text = self.get_full_text(file)

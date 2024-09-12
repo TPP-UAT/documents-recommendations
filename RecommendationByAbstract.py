@@ -1,43 +1,26 @@
-import numpy as np
 import tensorflow_hub as hub
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from RecommendationDetails import RecommendationDetails
 
 WEIGHT = 0.3
-
+METHOD_NAME = 'By Abstract'
 class RecommendationByAbstract:
-    def initialize(self, documents):
-        self.documents = documents
+    def __init__(self):
         self.embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
         self.weight = WEIGHT
+        self.method_name = METHOD_NAME
+        self.tfidf_vectorizer = TfidfVectorizer()
 
-    def prepare_data(self, new_abstract):
-        abstracts = list(self.documents.get_abstracts_by_document().values())
-        abstracts.append(new_abstract)
+    def get_recommendations(self, article, document_to_recommend):
+        abstracts = [article.get_abstract(), document_to_recommend.get_abstract()]
+        tfidf_matrix = self.tfidf_vectorizer.fit_transform(abstracts)
+        top_keywords = {}
 
-        # Vectorization of abstracts
-        tfidf_vectorizer = TfidfVectorizer()
-        tfidf_matrix = tfidf_vectorizer.fit_transform(abstracts)
+        # Calculation of cosine similarity between the two abstracts
+        similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])
+        doc_method_probability = similarity_scores.flatten()[0]
+        top_keywords['result'] = doc_method_probability
 
-        # Calculation of cosine similarity between abstracts
-        similarity_scores = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1])
 
-        return similarity_scores.flatten()
-
-    def get_recommendations(self, document):
-        similarity_scores = self.prepare_data(document.abstract)
-
-        # Normalize similarities
-        max_similarities = np.max(similarity_scores)
-        if max_similarities == 0:
-            print("No matches found.")
-            return {}
-
-        normalized_similarities = (similarity_scores * self.weight) / max_similarities
-
-        # Map probabilities to document IDs and print
-        probs_by_doc_dict = {doc_title: prob for doc_title, prob in zip(self.documents.get_abstracts_by_document().keys(), normalized_similarities)}
-        for doc_title, prob in probs_by_doc_dict.items():
-            print(f"Abstract Probability for {doc_title}: {prob}")
-
-        return probs_by_doc_dict
+        return RecommendationDetails(self.method_name, doc_method_probability, top_keywords, self.weight)
